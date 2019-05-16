@@ -40,10 +40,22 @@
 // void draw_fractal_tree(double center_x, double center_y, int size, int num_iterations);
 // void draw_fractal_atree(double center_x, double center_y, int size, int num_iterations);
 
+double gx(double);
+
 int main() 
 {
     Figure * figure = start_figure(130.0, 160.0);
+    set_thickness_resolution(figure, 3.1, 24);
+    Color c = {.r=1, .g=2, .b=3};
+    set_color(figure, c);
+    draw_fx(figure, gx, 20.5, 80.5);
+    export_svg(figure, "canvas1.svg");
+
     return 0;
+}
+
+double gx(double x){
+    return 2*x;
 }
 
 

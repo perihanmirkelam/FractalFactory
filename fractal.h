@@ -1,25 +1,33 @@
 #ifndef fractal
 #define fractal
 
-typedef struct Figure_s
+typedef struct
 {
     int width, height;
     double thickness, resolution;
+    struct Color_s *color;
+    struct svg_node_s *svg_head;
+    char* svg;
 } Figure;
+
+typedef struct svg_node_s{
+    char * tag;
+    struct svg_node* next;
+} svg_node;
 
 typedef struct Color_s
 {
     int r, g, b;
 } Color;
 
-typedef struct Point2D_s
+typedef struct
 {
     int x, y;
 } Point2D;
 
-typedef struct Tree_s{
+typedef struct{
     int n, root;
-}Tree;
+} Tree;
 
 Figure *start_figure(double width, double height);
 void set_thickness_resolution(Figure * fig, double thickness, double resolution);
@@ -43,5 +51,11 @@ char* concat(const char *, const char *);
 char* concatWithInteger(const char *, float);
 char* to_string_from_int(int);
 char* to_string_from_float(float);
+
+
+void appendString(char *, char *);
+void appendInteger(char *, int);
+
+void append_svg_tag(struct svg_node**, char *);
 
 #endif
