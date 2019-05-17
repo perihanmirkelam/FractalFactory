@@ -20,7 +20,7 @@ typedef struct Color_s
     int r, g, b;
 } Color;
 
-typedef struct
+typedef struct Point2D_s
 {
     int x, y;
 } Point2D;
@@ -56,6 +56,9 @@ char* to_string_from_float(float);
 void appendString(char *, char *);
 void appendInteger(char *, int);
 
-void append_svg_tag(struct svg_node**, char *);
+void append_svg_tag(svg_node **, char *);
+void append_svg_rect_tag(char *, Figure *, int, int);
+void append_rgb_part_of_tag(char *, Color *);
+void append_svg_line_tag(char * tag, Figure *fig, Point2D *p1, Point2D *p2);
 
 #endif
