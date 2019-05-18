@@ -1,19 +1,30 @@
 #ifndef fractal
 #define fractal
 
+static char * SVG_SVG = "<svg height=\"";
+static char * SVG_WIDTH = "\" width=\"";
+static char * SVG_HEIGHT = "\" height=\"";
+static char * SVG_TAG_END = "\">\n";
+
+
 typedef struct
 {
     int width, height;
     double thickness, resolution;
     struct Color_s *color;
-    struct svg_node_s *svg_head;
-    char* svg;
+    struct svg_line_node_s *svg_head;
+    struct Point2D_s *start;
+    struct Point2D_s *end;
+    struct Point2D_s *origin;
+    //char* svg;
+    //char* lines;
 } Figure;
 
-typedef struct svg_node_s{
-    char * tag;
-    struct svg_node* next;
-} svg_node;
+typedef struct svg_line_node_s{
+    struct Point2D_s *start;
+    struct Point2D_s *end;
+    struct svg_line_node_s* next;
+} lines;
 
 typedef struct Color_s
 {
@@ -33,7 +44,7 @@ Figure *start_figure(double width, double height);
 void set_thickness_resolution(Figure * fig, double thickness, double resolution);
 void set_color(Figure * fig, Color c);
 void draw_fx(Figure * fig, double f(double x), double start_x, double end_x);
-void draw_polyline(Point2D * poly_line, int n);
+void draw_polyline(Point2D * poly_line, int n, Figure *); //remove fig
 void draw_circle(Point2D * center, double r);
 void draw_ellipse(/*...*/);
 void draw_binary_tree(Tree * root);
@@ -56,9 +67,11 @@ char* to_string_from_float(float);
 void appendString(char *, char *);
 void appendInteger(char *, int);
 
-void append_svg_tag(svg_node **, char *);
+//void append_svg_tag(svg_node **, char *);
 void append_svg_rect_tag(char *, Figure *, int, int);
 void append_rgb_part_of_tag(char *, Color *);
+char * svg_head_tag(int, int);
 void append_svg_line_tag(char * tag, Figure *fig, Point2D *p1, Point2D *p2);
+void printPoint(Point2D *);
 
 #endif

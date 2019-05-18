@@ -4,7 +4,7 @@ CFLAGS = -c
 all: FractalGenerator
 
 FractalGenerator: main.o fractal.o
-	$(CC) main.o fractal.o -o run
+	$(CC) main.o fractal.o -o run -lm
 
 main.o: main.c
 	$(CC) $(CFLAGS) main.c

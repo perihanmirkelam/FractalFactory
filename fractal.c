@@ -4,13 +4,25 @@
 #include <math.h>
 #include "fractal.h"
 
+
+
 Figure *start_figure(double width, double height){
     Figure * fig =  (Figure*) malloc(sizeof(Figure));
-    fig->width = width;
-    fig->height = height;
+    Point2D *start = (Point2D*)malloc(sizeof(Point2D));
+    Point2D *end = (Point2D*)malloc(sizeof(Point2D));
+    Point2D *origin = (Point2D*)malloc(sizeof(Point2D));
+    char * line = "xyz";
+    fig->width = width * 2;
+    fig->height = height * 2;
+    fig->start = start;
+    fig->end = end;
+    origin->x = (int)width;
+    origin->y = (int)height;
+    fig->origin = origin;
+    //fig->lines = line;
     //svg_node *svgHead = NULL;
     //fig->svg_head = svgHead;
-    printf("Start figure: (%.2fx%.2f)\n",width,height);
+    printf("Start figure: (%dx%d)\n",fig->width,fig->height);
     return fig;
 }
 
@@ -30,10 +42,85 @@ void set_color(Figure * fig, Color c){
 }
 
 void draw_fx(Figure * fig, double f(double x), double start_x, double end_x){
-    
-    printf("g(start_x) = g(%.2f) = %.2f\n", start_x, f(start_x));
-    printf("g(end_x) = g(%.2f) = %.2f\n", end_x, f(end_x));
+    //Point2D *start = (Point2D*)malloc(sizeof(Point2D));
+    //Point2D *end = (Point2D*)malloc(sizeof(Point2D));
+    int interval = (int)((end_x - start_x)/fig->resolution);
+    int temp_start = start_x, temp_end, i, x1, y1, x2, y2, count=0;
+    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*fig->resolution*2);
+    if(end_x > start_x){
+        printf("INTERVAL: %d\n", interval);
+        // printf("g(start_x) = g(%.2f) = %.2f\n", start_x, f(start_x));
+        // printf("g(end_x) = g(%.2f) = %.2f\n", end_x, f(end_x));
+        // fig->start->x = (int)start_x + fig->origin->x;
+        // fig->start->y = fig->origin->y - (int)f(start_x);
+        // fig->end->x = (int)end_x + fig->origin->x;
+        // fig->end->y = fig->origin->y - (int)f(end_x);
+        // printf("g(x) = g(%d) = %d\n", fig->start->x, fig->start->y);
+        // printf("g(x) = g(%d) = %d\n", fig->end->x, fig->end->y);
+        for(i = 0; i<fig->resolution; i++){
+            temp_end = temp_start + interval;
+            x1 = (int)temp_start + fig->origin->x;
+            y1 = fig->origin->y - (int)f(temp_start);
+            x2 = (int)temp_end + fig->origin->x;
+            y2 = fig->origin->y - (int)f(temp_end);
+            if( x1<=fig->width && x1>=0 && y1<=fig->height && y1>=0
+                && x2<=fig->width && x2>=0 && y2<=fig->height && y2>=0){
+                count++;           
+                (*(points + i)).x = x1;
+                (*(points + i)).y  = y1;
+                (*(points + i + 1)).x = x2;
+                (*(points + i + 1)).y = y2;
+                printPoint(points + i);
+                printPoint(points + i + 1);
+            } else {
+                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)", x1, y1, x2, y2);
+            }
+            temp_start += 2;
+        }
+        draw_polyline(points, count, fig);
+    }
+}
 
+void draw_polyline(Point2D * poly_line, int n, Figure * fig){
+    printf("\nlines count: %d\n", n);
+    int i;
+    Point2D *axis_start = (Point2D*)malloc(sizeof(Point2D));
+    Point2D *axis_end = (Point2D*)malloc(sizeof(Point2D));
+    char * svg = svg_head_tag((int)fig->width, (int)fig->height);
+    append_svg_rect_tag(svg, fig, fig->width, fig->height);
+    axis_start->x = (int)(fig->width/2);
+    axis_start->y = (int) (fig->height);
+    axis_end->x = (int) (fig->width/2);
+    axis_end->y = 0;
+    append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
+    axis_start->x = 0;
+    axis_start->y = (int) (fig->height)/2;
+    axis_end->x = (int) (fig->width);
+    axis_end->y = (int) (fig->height)/2;
+    append_svg_line_tag(svg, fig, axis_start, axis_end); // y-axis
+
+    for(i = 0; i<n; i++){
+        append_svg_line_tag(svg, fig, (poly_line + i), (poly_line + i + 1));
+    }
+
+    appendString(svg, "</svg>\n");
+    FILE* fp;
+
+    fp = fopen("xyz.svg", "wb");
+
+    if(fp != NULL)
+    {
+        fwrite(svg, 1, strlen(svg), fp);
+        fclose(fp);
+    }
+    free(poly_line);
+    free(axis_start);
+    free(axis_end);
+    free(svg);
+}
+
+void printPoint(Point2D * p){
+    printf("(%d,%d)\n", p->x, p->y);
 }
 
 /*
@@ -48,17 +135,18 @@ draw_resize_figure.
 */
 
 char * svg_head_tag(int width, int height){
-    char * tag = (char*)malloc(sizeof(char)*13);
-    strcpy(tag, "<svg height=\"");
+    char * tag = (char*)malloc(sizeof(char)*strlen(SVG_SVG));
+    strcpy(tag, SVG_SVG);
     appendInteger(tag, (int)height);
-    appendString(tag, "\" width=\"");
+    appendString(tag, SVG_WIDTH);
     appendInteger(tag, (int)width);
-    appendString(tag,  "\">\n");
+    appendString(tag,  SVG_TAG_END);
     return tag;
 }
 
 void append_svg_line_tag(char *tag, Figure *fig, Point2D *p1, Point2D *p2){
     //"<line x1=\"0\" y1=\"0\" x2=\"200\" y2=\"200\" style=\"stroke:rgb(255,0,0);stroke-width:2\" />\n"
+    //printf("%s", tag);
     appendString(tag, "<line x1=\"");
     appendInteger(tag, p1->x);
     appendString(tag, "\" y1=\"");
@@ -71,10 +159,10 @@ void append_svg_line_tag(char *tag, Figure *fig, Point2D *p1, Point2D *p2){
     append_rgb_part_of_tag(tag, fig->color);
     appendString(tag, "\" stroke-width=\"");
     appendInteger(tag, fig->thickness);
-    appendString(tag, "\" fill=\"white\" />\n");
+    appendString(tag, "\" fill=\"black\" />\n");
 }
 
-void append_svg_rect_tag(char * tag, Figure *fig, int width, int height){
+void append_svg_rect_tag(char *tag, Figure *fig, int width, int height){
     appendString(tag, "<rect width=\"");
     appendInteger(tag, (int)width);
     appendString(tag, "\" height=\"");
@@ -87,53 +175,53 @@ void append_svg_rect_tag(char * tag, Figure *fig, int width, int height){
 }
 
 
-void append_rgb_part_of_tag(char * tag, Color *c){
+void append_rgb_part_of_tag(char *tag, Color *c){
     appendString(tag, "rgb(");
-    appendInteger(tag, c->r);
+    appendInteger(tag, (int)c->r);
     appendString(tag, ",");
-    appendInteger(tag, c->g);
+    appendInteger(tag, (int)c->g);
     appendString(tag, ",");
-    appendInteger(tag, c->b);
+    appendInteger(tag, (int)c->b);
     appendString(tag, ")");
 }
 
-// void append_axises(char *svg, Figure *fig){
-//     Point2D *axis_start, *axis_end;
-//     axis_start = (Point2D*)malloc(sizeof(Point2D));
-//     axis_end = (Point2D*)malloc(sizeof(Point2D));
-//     axis_start->x = (int)(fig->width)/3;
-//     axis_start->y = (int) (fig->height);
-//     axis_end->x = (int) (fig->width)/3;
-//     axis_end->y = 0;
-//     append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
-// }
-
-void export_svg(Figure * fig, char * file_name){
-    char * svg = svg_head_tag((int)fig->width, (int)fig->height);
+void append_axises(char *svg, Figure *fig){
     Point2D *axis_start, *axis_end;
     axis_start = (Point2D*)malloc(sizeof(Point2D));
-    //axis_end = (Point2D*)malloc(sizeof(Point2D));
-    
+    axis_end = (Point2D*)malloc(sizeof(Point2D));
+    axis_start->x = (int)(fig->width)/3;
+    axis_start->y = (int) (fig->height);
+    axis_end->x = (int) (fig->width)/3;
+    axis_end->y = 0;
+    append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
+}
+
+void export_svg(Figure * fig, char * file_name){
+    Point2D *axis_start = (Point2D*)malloc(sizeof(Point2D));
+    Point2D *axis_end = (Point2D*)malloc(sizeof(Point2D));
+    char * svg = svg_head_tag((int)fig->width, (int)fig->height);
+    //fig->svg = svg;
+
     append_svg_rect_tag(svg, fig, fig->width, fig->height);
+    
+    //appendString(svg, "<line x1=\"0\" y1=\"0\" x2=\"200\" y2=\"200\" style=\"stroke:rgb(255,0,0);stroke-width:2\" />\n");    
+    axis_start->x = (int)(fig->width/2);
+    axis_start->y = (int) (fig->height);
+    axis_end->x = (int) (fig->width/2);
+    axis_end->y = 0;
+    append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
+    axis_start->x = 0;
+    axis_start->y = (int) (fig->height)/2;
+    axis_end->x = (int) (fig->width);
+    axis_end->y = (int) (fig->height)/2;
+    append_svg_line_tag(svg, fig, axis_start, axis_end); // y-axis
+    append_svg_line_tag(svg, fig, fig->start, fig->end);
+
+    //append_axises(svg, fig);
     //append_tag(&svg, svg);
-    appendString(svg, "<line x1=\"0\" y1=\"0\" x2=\"200\" y2=\"200\" style=\"stroke:rgb(255,0,0);stroke-width:2\" />\n");
-    
-    // axis_start->x = (int)(fig->width)/2;
-    // axis_start->y = (int) (fig->height);
-    // axis_end->x = (int) (fig->width)/2;
-    // axis_end->y = 0;
-   //append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
-    // axis_start->x = 0;
-    // axis_start->y = (int) (fig->height)/2;
-    // axis_end->x = (int) (fig->width);
-    // axis_end->y = (int) (fig->height)/2;
-    // append_svg_line_tag(svg, fig, axis_start, axis_end); // x-axis
-
-   // append_axises(svg, fig);
-
-    
     //appendString(svg, "<rect width=\"130\" height=\"160\" stroke=\"black\" stroke-width=\"1\" fill=\"white\" />\n");
     //appendString(svg, "<circle cx=\"50\" cy=\"50\" r=\"40\" stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n");
+    //appendString(svg, fig->lines);
     appendString(svg, "</svg>\n");
     FILE* fp;
 
@@ -144,55 +232,34 @@ void export_svg(Figure * fig, char * file_name){
         fwrite(svg, 1, strlen(svg), fp);
         fclose(fp);
     }
+    free(fig->start);
+    free(fig->end);
+    free(axis_start);
+    free(axis_end);
+    free(svg);
 }
 
 void appendString(char *svg, char *text){
-    svg = (char*) realloc(svg, strlen(svg) + strlen(text) + 1);
-   // printf("\nsvg  size: %ld -> %s mem: %u", strlen(svg), svg, svg);
-   // printf("\ntext size: %ld -> %s mem: %u", strlen(text), text, text);
+    svg = (char*) realloc(svg, strlen(svg) + strlen(text));
+    // printf("\nsvg  size: %ld -> %s mem: %u", strlen(svg), svg, svg);
+    // printf("\ntext size: %ld -> %s mem: %u", strlen(text), text, text);
     strcat(svg, text);
-   // printf("\nconc size: %ld -> %s mem: %u\n", strlen(svg), svg, svg);
+   // printf("\nconc size: %ld mem: %u\n -> %s\n", strlen(svg), svg, svg);
 }
 
 void appendInteger(char *svg, int n){
-    char result[16];
-    sprintf(result, "%d", n);
-   // printf("\nOn appendInteger svg size: %ld -> %s mem: %u", strlen(svg), svg, svg);
-   // printf("\nThe string for the int num is %s, length:%ld", result, strlen(result));
-    appendString(svg, result);
+    int digit = (int)((ceil(log10(n+1))));
+    char text[digit];
+    sprintf(text, "%d", n);
+    // printf(" \n NUMBER %d, NUMBER OF DIGIT: %d\n", n, digit);
+    // printf("\nOn appendInteger svg size: %ld -> %s mem: %u", strlen(svg), svg, svg);
+    // printf("\nThe string for the int num is %s, length:%ld appending string...", text, strlen(text));
+    appendString(svg, text);
 }
 
 void appendFloat(char *svg, float n){
-    char * result = (char *) malloc(16*(sizeof(char)));
+    char * result = (char *) malloc(16*(sizeof(char))); // remove
     sprintf(result, "%f", n);
-   // printf("\n The string for the int num is %s, length:%ld", result, strlen(result));
+   // printf("\n The string for the float num is %s, length:%ld", result, strlen(result));
     appendString(svg, result);
 }
-
-//linked list :
-// void append_tag(svg_node** head_ref, char * new_tag)
-// {
-//     svg_node *new_node = (svg_node*) malloc(sizeof(svg_node));
-//     svg_node *last = *head_ref;
-//     new_node->tag = new_tag;
-//     new_node->next = NULL;
-//     if (*head_ref == NULL)
-//     {
-//        *head_ref = new_node;
-//        return;
-//     }
-//     while (last->next != NULL) last = last->next;
-//     last->next = new_node;
-//     return;
-// }
-
-// void print_list(svg_node *node)
-// {
-//     printf("***************************");
-//   while (node != NULL)
-//   {
-//      printf("%s\n", node->tag);
-//      node = node->next;
-//    }
-//    printf("***************************");
-// }
