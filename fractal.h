@@ -45,8 +45,8 @@ void set_thickness_resolution(Figure * fig, double thickness, double resolution)
 void set_color(Figure * fig, Color c);
 void draw_fx(Figure * fig, double f(double x), double start_x, double end_x);
 void draw_polyline(Point2D * poly_line, int n, Figure *); //remove fig
-void draw_circle(Point2D * center, double r);
-void draw_ellipse(/*...*/);
+void draw_circle(Point2D *, double, Figure *); //remove fig
+void draw_ellipse(Point2D *, double, double, Figure *);
 void draw_binary_tree(Tree * root);
 void scale_figure(double scale_x, double scale_y);
 void resize_figure(Point2D start_roi, Point2D end_roi);

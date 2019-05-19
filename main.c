@@ -7,11 +7,14 @@ double g(double);
 
 int main() 
 {
-    Figure * figure = start_figure(1000.1, 1000.1);
-    set_thickness_resolution(figure, 1.1, 10);
+    Figure * figure = start_figure(200.1, 200.1);
+    set_thickness_resolution(figure, 1.0, 40.0);
     Color c = {.r=1, .g=2, .b=3};
     set_color(figure, c);
-    draw_fx(figure, g, 0.0, 10.0);
+    //draw_fx(figure, g, -50.0, 50.0);
+    Point2D center= {.x=-10.0, .y=-20.0};
+    draw_circle(&center, 40.0, figure);
+    draw_ellipse(&center, 2.0, 3.0, figure);
     //export_svg(figure, "canvas3.svg");
 
     free(figure);
@@ -19,7 +22,7 @@ int main()
 }
 
 double g(double x){
-    return x*x;
+    return x*x*x /10;
 }
 
 

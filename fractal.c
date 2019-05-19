@@ -5,7 +5,6 @@
 #include "fractal.h"
 
 
-
 Figure *start_figure(double width, double height){
     Figure * fig =  (Figure*) malloc(sizeof(Figure));
     Point2D *start = (Point2D*)malloc(sizeof(Point2D));
@@ -19,9 +18,6 @@ Figure *start_figure(double width, double height){
     origin->x = (int)width;
     origin->y = (int)height;
     fig->origin = origin;
-    //fig->lines = line;
-    //svg_node *svgHead = NULL;
-    //fig->svg_head = svgHead;
     printf("Start figure: (%dx%d)\n",fig->width,fig->height);
     return fig;
 }
@@ -42,47 +38,42 @@ void set_color(Figure * fig, Color c){
 }
 
 void draw_fx(Figure * fig, double f(double x), double start_x, double end_x){
-    //Point2D *start = (Point2D*)malloc(sizeof(Point2D));
-    //Point2D *end = (Point2D*)malloc(sizeof(Point2D));
     int interval = (int)((end_x - start_x)/fig->resolution);
-    int temp_start = start_x, temp_end, i, x1, y1, x2, y2, count=0;
-    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*fig->resolution*2);
-    if(end_x > start_x){
-        printf("INTERVAL: %d\n", interval);
-        // printf("g(start_x) = g(%.2f) = %.2f\n", start_x, f(start_x));
-        // printf("g(end_x) = g(%.2f) = %.2f\n", end_x, f(end_x));
-        // fig->start->x = (int)start_x + fig->origin->x;
-        // fig->start->y = fig->origin->y - (int)f(start_x);
-        // fig->end->x = (int)end_x + fig->origin->x;
-        // fig->end->y = fig->origin->y - (int)f(end_x);
-        // printf("g(x) = g(%d) = %d\n", fig->start->x, fig->start->y);
-        // printf("g(x) = g(%d) = %d\n", fig->end->x, fig->end->y);
-        for(i = 0; i<fig->resolution; i++){
+    int count = (int)((end_x - start_x)/interval);
+    int temp_start = start_x, temp_end, i=0, j=0, x1, y1, x2, y2;
+    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*count*2);
+    if(end_x > start_x && start_x<fig->width/2 && end_x<fig->width/2 && (end_x - start_x) > fig->resolution){
+        printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", 
+        (int)start_x, (int)end_x, -(int)fig->height/2, (int)fig->height/2, interval, count);
+        for(j=0;j<(count);j++){
             temp_end = temp_start + interval;
             x1 = (int)temp_start + fig->origin->x;
             y1 = fig->origin->y - (int)f(temp_start);
             x2 = (int)temp_end + fig->origin->x;
             y2 = fig->origin->y - (int)f(temp_end);
-            if( x1<=fig->width && x1>=0 && y1<=fig->height && y1>=0
-                && x2<=fig->width && x2>=0 && y2<=fig->height && y2>=0){
-                count++;           
+            if( x1<fig->width && x1>0 && y1<fig->height && y1>0
+                && x2<fig->width && x2>0 && y2<fig->height && y2>0){
                 (*(points + i)).x = x1;
                 (*(points + i)).y  = y1;
                 (*(points + i + 1)).x = x2;
                 (*(points + i + 1)).y = y2;
                 printPoint(points + i);
                 printPoint(points + i + 1);
+                i+=2;
             } else {
-                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)", x1, y1, x2, y2);
+                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n", x1, y1, x2, y2);
             }
-            temp_start += 2;
+            temp_start += interval;
         }
-        draw_polyline(points, count, fig);
+        draw_polyline(points, i-1, fig);
+    } else {
+        printf("Not print the graph of function. Points are out of boundaries");
+        free(points);
     }
 }
 
 void draw_polyline(Point2D * poly_line, int n, Figure * fig){
-    printf("\nlines count: %d\n", n);
+    printf("Lines count: %d\n", n);
     int i;
     Point2D *axis_start = (Point2D*)malloc(sizeof(Point2D));
     Point2D *axis_end = (Point2D*)malloc(sizeof(Point2D));
@@ -99,14 +90,14 @@ void draw_polyline(Point2D * poly_line, int n, Figure * fig){
     axis_end->y = (int) (fig->height)/2;
     append_svg_line_tag(svg, fig, axis_start, axis_end); // y-axis
 
-    for(i = 0; i<n; i++){
+    for(i = 0; i<n; i+=2){
         append_svg_line_tag(svg, fig, (poly_line + i), (poly_line + i + 1));
     }
 
     appendString(svg, "</svg>\n");
     FILE* fp;
 
-    fp = fopen("xyz.svg", "wb");
+    fp = fopen("polyline.svg", "wb");
 
     if(fp != NULL)
     {
@@ -119,20 +110,60 @@ void draw_polyline(Point2D * poly_line, int n, Figure * fig){
     free(svg);
 }
 
+void draw_circle(Point2D * center, double r, Figure* fig){
+    //(x-h)^2 + (y-k)^2 = r^2 -> y =  +- sqrt(r^2 - (x-h)^2)
+    int interval = (int)((r*2)/fig->resolution);
+    int count = (int)((r*2)/interval);
+    int start_x = center->x - r, end_x = center->x + r;
+    int temp_start = start_x, temp_end, i=0, j=0, x1, y1, y1n, x2, y2, y2n;
+    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*count*4);
+    printPoint(center);
+    if(end_x > start_x && start_x<fig->width/2 && end_x<fig->width/2 && (end_x - start_x) > fig->resolution){
+        printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", 
+        (int)start_x, (int)end_x, -(int)fig->height/2, (int)fig->height/2, interval, count);
+        for(j=0;j<count;j++){
+            temp_end = temp_start + interval;
+            x1 = (int)temp_start + fig->origin->x;
+            y1 = fig->origin->y - (int)sqrt((r*r)-((temp_start-center->x)*(temp_start-center->x))) - center->y; //sqrt(r*r - temp_start*temp_start)
+            y1n = fig->origin->y + (int)sqrt((r*r)-((temp_start-center->x)*(temp_start-center->x))) - center->y;
+            printf("sqrt(%d*%d - %d*%d)= %d\n", (int)r,(int)r,(int)temp_start,(int)temp_start, (int)sqrt((r*r)-(temp_start*temp_start)));
+            x2 = (int)temp_end + fig->origin->x;
+            y2 = fig->origin->y - (int)sqrt((r*r)-((temp_end-center->x)*(temp_end-center->x))) - center->y;
+            y2n = fig->origin->y + (int)sqrt((r*r)-((temp_end-center->x)*(temp_end-center->x))) - center->y;
+            if( x1<fig->width && x1>0 && y1<fig->height && y1>0 && y1n<fig->height && y1n>0
+                && x2<fig->width && x2>0 && y2<fig->height && y2>0 && y2<fig->height && y2n>0){
+                (*(points + i)).x = x1;
+                (*(points + i)).y  = y1;
+                (*(points + i + 1)).x = x2;
+                (*(points + i + 1)).y = y2;
+                (*(points + i + 2)).x = x1;
+                (*(points + i + 2)).y = y1n;
+                (*(points + i + 3)).x = x2;
+                (*(points + i + 3)).y = y2n;
+                printPoint(points + i);
+                printPoint(points + i + 1);
+                printPoint(points + i + 2);
+                printPoint(points + i + 3);
+                i+=4;
+            } else {
+                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n", x1, y1, x2, y2);
+            }
+            temp_start += interval;
+        }
+        draw_polyline(points, i -1, fig);
+    } else {
+         free(points);
+         printf("Not print the circle. Points are out of boundaries");
+    }
+}
+
+void draw_ellipse(Point2D * center, double h_r, double v_r, Figure *fig){
+   //(x-h)^2/(h_r^2) + (y-k)^2/(v_r^2) = r^2 -> y =  +- sqrt(r^2 - (x-h)^2)
+}
+
 void printPoint(Point2D * p){
     printf("(%d,%d)\n", p->x, p->y);
 }
-
-/*
-Draws the given function in the figure initialized by “ start_figure ”. It will draw the function
-within the range defined by “ start_x” and “end_x ”. You should draw the function as a set
-of connected lines. Any such line should be no smaller in length than the resolution defined in
-“resolution”. The lines drawing the graph should have the thickness in the given same named
-argument. line>res
-Make sure that the figure fits in the intended position in the canvas. If the portion of the graph
-is outside the canvas, it should be removed properly. See the explanation for
-draw_resize_figure.
-*/
 
 char * svg_head_tag(int width, int height){
     char * tag = (char*)malloc(sizeof(char)*strlen(SVG_SVG));
@@ -147,6 +178,9 @@ char * svg_head_tag(int width, int height){
 void append_svg_line_tag(char *tag, Figure *fig, Point2D *p1, Point2D *p2){
     //"<line x1=\"0\" y1=\"0\" x2=\"200\" y2=\"200\" style=\"stroke:rgb(255,0,0);stroke-width:2\" />\n"
     //printf("%s", tag);
+    //printf("Printing...\n");
+   // printPoint(p1);
+    //printPoint(p2);
     appendString(tag, "<line x1=\"");
     appendInteger(tag, p1->x);
     appendString(tag, "\" y1=\"");
@@ -173,7 +207,6 @@ void append_svg_rect_tag(char *tag, Figure *fig, int width, int height){
     appendInteger(tag, fig->thickness);
     appendString(tag, "\" fill=\"white\" />\n");
 }
-
 
 void append_rgb_part_of_tag(char *tag, Color *c){
     appendString(tag, "rgb(");
