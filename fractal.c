@@ -165,63 +165,50 @@ void draw_ellipse(Point2D * center, double a, double b, Figure *fig){
      //[(x-h)/a]^2 + [(y-k)/b]^2 = 1 -> y =  +-sqrt(1-[(x-h)/a]^2)*b + k
     int interval = (int)((a*2)/fig->resolution); // interval distance
     int count = (int)((a*2)/interval); // line count
-    int start_x = center->x - a, end_x = center->x + a; // boundaries
+    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*count*4);
     int svg_x = fig->origin->x, svg_y = fig->origin->y; // shift values for svg coordinate system
-    int x = start_x, i=0, j=0, px1, py1, py1n, px2, py2, py2n;
     int h = center->x, k = center->y; // translation for axises
-    end_x = (a*sqrt(1 - (k*k)/(b*b))) + h;
-    
-    start_x = (a* (-sqrt(1 - (k*k)/(b*b)))) + h;
+    int start_x = h - a, end_x = h + a, start_y = k + b, end_y = k - b; // boundaries
+    int x = start_x, i=0, j=0, px1, py1, py1s, px2, py2, py2s;
     x = start_x;
 
-    printf("start_x: %d, end_x: %d", start_x, end_x);
-
-    Point2D * points = (Point2D*)malloc(sizeof(Point2D)*count*4);
-    printPoint(center);
-    printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", 
-        (int)start_x, (int)end_x, center->y - (int)a, center->y + (int)b, interval, count);
-    if(end_x > start_x && start_x<fig->width/2 && end_x<fig->width/2 && (end_x - start_x) > fig->resolution){
-
+    printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", (int)start_x, (int)end_x, start_y, end_y, interval, count);
+    if(end_x > start_x && start_x<fig->width && end_x<fig->width && (end_x - start_x) > fig->resolution && b>0 && a>0){
         for(j=0;j<count;j++){
-            // temp_end = x + interval;
             px1 = svg_x + (int) x;
-            py1 = svg_y + (int) (k - (sqrt(1-(pow((x-h)/a,2)))*b));
-            py1n = svg_y + (int) (k + (sqrt(1-(pow((x-h)/a,2)))*b));
-            printf("(x,y)=(%d,%d)\n", 
-            (int)x, (int) (sqrt(1-(pow((x-h)/a,2)))*b + k));
-            printf("(x,y)=(%d,%d)\n", 
-            (int)x, (int) (int) (k - (sqrt(1-(pow((x-h)/a,2)))*b)));
+            py1 = svg_y + (int) (-(sqrt(1-(pow((x-h)/a,2)))*b) - k);
+            py1s = svg_y + (int) ((sqrt(1-(pow((x-h)/a,2)))*b) - k);
 
             x += interval;
             px2 = svg_x + (int) x;
-            py2 = svg_y + (int) (k - (sqrt(1-(pow((x-h)/a,2)))*b));
+            py2 = svg_y + (int) (-(sqrt(1-(pow((x-h)/a,2)))*b) - k);
             int m = (int)1-(pow((102-h)/a,2));
             printf("x=102 y=%d", m);
-            py2n = svg_y + (int) (k + (sqrt(1-(pow((x-h)/a,2)))*b));
-            if( px1<fig->width && px1>0 && py1<fig->height && py1>0 && py1n<fig->height && py1n>0
-                && px2<fig->width && px2>0 && py2<fig->height && py2>0 && py2<fig->height && py2n>0){
+            py2s = svg_y + (int) ((sqrt(1-(pow((x-h)/a,2)))*b) - k);
+            if( px1<fig->width && px1>0 && py1<fig->height && py1>0 && py1s<fig->height && py1s>0
+                && px2<fig->width && px2>0 && py2<fig->height && py2>0 && py2<fig->height && py2s>0){
                 (*(points + i)).x = px1;
                 (*(points + i)).y  = py1;
                 (*(points + i + 1)).x = px2;
                 (*(points + i + 1)).y = py2;
                 (*(points + i + 2)).x = px1;
-                (*(points + i + 2)).y = py1n;
+                (*(points + i + 2)).y = py1s;
                 (*(points + i + 3)).x = px2;
-                (*(points + i + 3)).y = py2n;
-                printPoint(points + i);
-                printPoint(points + i + 1);
-                printPoint(points + i + 2);
-                printPoint(points + i + 3);
+                (*(points + i + 3)).y = py2s;
+              //  printPoint(points + i);
+              //  printPoint(points + i + 1);
+              //  printPoint(points + i + 2);
+              //  printPoint(points + i + 3);
                 i+=4;
             } else {
-                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n", px1-svg_x, svg_y-py1 , px2-svg_x, svg_y-py2);
+                printf("\nOUT OF BOUNDARIES! (%d,%d), (%d,%d), (%d,%d), (%d,%d)\n", 
+                px1-svg_x, py1-svg_y , px1-svg_x, py1s-svg_y, px2-svg_x, py2-svg_y, px2-svg_x, py2s-svg_y);
             }
-            // temp_start += interval;
         }
-        draw_polyline(points, i -1, fig);
+        draw_polyline(points, i-1, fig);
     } else {
          free(points);
-         printf("Not print the ellipse. Points are out of boundaries");
+         printf("Not print the ellipse. Points are out of boundaries.\n");
     }
 }
 
