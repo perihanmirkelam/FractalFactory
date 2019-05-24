@@ -13,8 +13,8 @@ int main()
     set_color(figure, c);
     //draw_fx(figure, g, -50.0, 50.0);
     Point2D center= {.x=20.0, .y=60.0};
-    //draw_circle(&center, 40.0, figure);
-    draw_ellipse(&center, 120.0, 80.0, figure);
+    draw_circle(&center, 40.0, figure);
+    //draw_ellipse(&center, 120.0, 80.0, figure);
     //export_svg(figure, "canvas3.svg");
 
     free(figure);

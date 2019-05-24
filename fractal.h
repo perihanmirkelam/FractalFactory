@@ -5,26 +5,25 @@ static char * SVG_SVG = "<svg height=\"";
 static char * SVG_WIDTH = "\" width=\"";
 static char * SVG_HEIGHT = "\" height=\"";
 static char * SVG_TAG_END = "\">\n";
-
+static char * SVG_SVG_END = "</svg>\n";
 
 typedef struct
 {
     int width, height;
     double thickness, resolution;
     struct Color_s *color;
-    struct svg_line_node_s *svg_head;
     struct Point2D_s *start;
     struct Point2D_s *end;
     struct Point2D_s *origin;
-    //char* svg;
-    //char* lines;
+    struct svg_line_node_s *line_head;
+    char * svg_text;
 } Figure;
 
 typedef struct svg_line_node_s{
     struct Point2D_s *start;
     struct Point2D_s *end;
     struct svg_line_node_s* next;
-} lines;
+} Line;
 
 typedef struct Color_s
 {
@@ -68,10 +67,13 @@ void appendString(char *, char *);
 void appendInteger(char *, int);
 
 //void append_svg_tag(svg_node **, char *);
+void append_axises(Figure *);
 void append_svg_rect_tag(char *, Figure *, int, int);
 void append_rgb_part_of_tag(char *, Color *);
-char * svg_head_tag(int, int);
+char *svg_head_tag(int, int);
 void append_svg_line_tag(char * tag, Figure *fig, Point2D *p1, Point2D *p2);
 void printPoint(Point2D *);
+void write_svg_file(char *, char*);
+void free_all(Figure *);
 
 #endif
