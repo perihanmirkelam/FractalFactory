@@ -5,9 +5,6 @@
 #include "fractal.h"
 
 void add_line(Line **head, Point2D *p1, Point2D *p2){
-    printf("Add line: \n");
-    printPoint(p1);
-    printPoint(p2);
     Line* new_line = (Line*) malloc(sizeof(Line));
     Line *last = *head;
     new_line->start = p1;
@@ -46,14 +43,13 @@ Figure *start_figure(double width, double height){
     fig->origin = origin;
     line = NULL;
     fig->line_head = line;
-
-    printf("Start figure: (%dx%d)\n",fig->width,fig->height);
+    // printf("Start figure: (%dx%d)\n",fig->width,fig->height);
     append_axises(fig);
     return fig;
 }
 
 void set_thickness_resolution(Figure * fig, double thickness, double resolution){
-    printf("Set thickenss:%.2f resolution:%.2f\n", thickness, resolution);
+    // printf("Set thickenss:%.2f resolution:%.2f\n", thickness, resolution);
     fig->thickness = thickness;
     fig->resolution = resolution;
 }
@@ -64,7 +60,7 @@ void set_color(Figure * fig, Color c){
     color->g = c.g;
     color->b = c.b;
     fig->color = color;
-    printf("Set color:(%d,%d,%d)\n", fig->color->r, fig->color->g, fig->color->b);
+    //printf("Set color:(%d,%d,%d)\n", fig->color->r, fig->color->g, fig->color->b);
 }
 
 void draw_fx(Figure * fig, double f(double x), double start_x, double end_x){
@@ -88,12 +84,10 @@ void draw_fx(Figure * fig, double f(double x), double start_x, double end_x){
                 (*(points + i)).y  = y1;
                 (*(points + i + 1)).x = x2;
                 (*(points + i + 1)).y = y2;
-                printPoint(points + i);
-                printPoint(points + i + 1);
                 i+=2;
             } else {
-                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n", 
-                x1 - svg_x, svg_y - y1, x2 - svg_x, svg_y - y2);
+                // printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n", 
+                //x1 - svg_x, svg_y - y1, x2 - svg_x, svg_y - y2);
             }
         }
         draw_polyline(points, i-1, fig);
@@ -111,9 +105,7 @@ void draw_circle(Point2D * center, double r, Figure* fig){
     int svg_x = fig->origin->x, svg_y = fig->origin->y; // shift values for svg coordinate system
     int x=start_x, h=center->x, k=center->y, i=0, j=0, px1, py1, py1s, px2, py2, py2s;
     Point2D * points = (Point2D*)malloc(sizeof(Point2D)*count*4);
-    printf("Center: ");
-    printPoint(center);
-    printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", 
+    printf("Circle: [%d,%d]->[%d,%d] (INTERVAL: %d - Line Count: %d)\n", 
     (int)start_x, (int)end_x, center->y - (int)r, center->y + (int)r, interval, count);
     if(end_x > start_x && start_x<fig->width/2 && end_x<fig->width/2 && (end_x - start_x) > fig->resolution){
 
@@ -137,8 +129,8 @@ void draw_circle(Point2D * center, double r, Figure* fig){
                 (*(points + i + 3)).y = py2s;
                 i+=4;
             } else {
-                printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n",
-                px1 - svg_x, svg_y - py1 , px2 - svg_x, svg_y - py2);
+                //printf("OUT OF BOUNDARIES! (%d,%d), (%d,%d)\n",
+                //px1 - svg_x, svg_y - py1 , px2 - svg_x, svg_y - py2);
             }
         }
         draw_polyline(points, i -1, fig);
@@ -159,7 +151,7 @@ void draw_ellipse(Point2D * center, double a, double b, Figure *fig){
     int x = start_x, i=0, j=0, px1, py1, py1s, px2, py2, py2s;
     x = start_x;
 
-    printf("f: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", (int)start_x, (int)end_x, start_y, end_y, interval, count);
+    printf("Ellipse: [%d,%d] -> [%d,%d] (INTERVAL: %d - Line Count: %d)\n", (int)start_x, (int)end_x, start_y, end_y, interval, count);
     if(end_x > start_x && start_x<fig->width && end_x<fig->width && (end_x - start_x) > fig->resolution && b>0 && a>0){
         for(j=0;j<count;j++){
             px1 = svg_x + (int) x;
@@ -183,19 +175,17 @@ void draw_ellipse(Point2D * center, double a, double b, Figure *fig){
                 (*(points + i + 3)).y = py2s;
                 i+=4;
             } else {
-                printf("\nOUT OF BOUNDARIES! (%d,%d), (%d,%d), (%d,%d), (%d,%d)\n", 
-                px1-svg_x, py1-svg_y , px1-svg_x, py1s-svg_y, px2-svg_x, py2-svg_y, px2-svg_x, py2s-svg_y);
+               // printf("\nOUT OF BOUNDARIES! (%d,%d), (%d,%d), (%d,%d), (%d,%d)\n", 
+               // px1-svg_x, py1-svg_y , px1-svg_x, py1s-svg_y, px2-svg_x, py2-svg_y, px2-svg_x, py2s-svg_y);
             }
         }
         draw_polyline(points, i-1, fig);
     } else {
-         free(points);
          printf("Not print the ellipse. Points are out of boundaries.\n");
     }
 }
 
 void draw_polyline(Point2D * poly_line, int n, Figure * fig){
-    printf("Lines count: %d\n", n);
     int i;
     Point2D *axis_start = (Point2D*)malloc(sizeof(Point2D));
     Point2D *axis_end = (Point2D*)malloc(sizeof(Point2D));
@@ -232,6 +222,7 @@ void export_svg(Figure * fig, char * file_name){
     appendString(svg, SVG_SVG_END);
     fig->svg_text = svg;
     write_svg_file(file_name, svg);
+    printf("\nExported your figure on %s.svg file.\n", file_name);
     free_all(fig);
 }
 

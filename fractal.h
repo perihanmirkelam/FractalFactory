@@ -76,4 +76,5 @@ void printPoint(Point2D *);
 void write_svg_file(char *, char*);
 void free_all(Figure *);
 
+
 #endif
