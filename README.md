@@ -2,7 +2,7 @@
 
 A command line tool to draw geometrical shapes on svg.
 
-<img src="/images/ffdiagram.png" width=800>
+<img src="/images/ffdiagram.png">
 
 ### Usage
 
